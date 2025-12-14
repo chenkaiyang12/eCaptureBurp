@@ -1,0 +1,38 @@
+# 工作流名称
+name: Build eCaptureBurp JAR (JDK 1.8)
+
+# 触发条件：推送到main分支、PR到main分支、手动触发
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+# 定义构建任务
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 步骤1：检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 步骤2：配置JDK 1.8（核心修改点）
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'          # 明确指定JDK 1.8
+          distribution: 'temurin'    # Eclipse Temurin 兼容JDK 8，稳定且常用
+          cache: maven               # 缓存Maven依赖（Gradle需改为gradle）
+
+      # 步骤3：Maven打包（JDK 1.8适配）
+      - name: Build JAR with Maven (JDK 1.8)
+        run: mvn -B clean package -DskipTests --file pom.xml  # 跳过测试加速打包（可选）
+
+      # 步骤4：上传JAR包（方便下载）
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eCaptureBurp-jar-jdk8
+          path: target/*.jar  # Maven默认打包输出路径，若有自定义需调整
